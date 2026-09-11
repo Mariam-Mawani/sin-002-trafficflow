@@ -57,6 +57,20 @@ public class IngestionServiceAppTest {
         assertEquals("INT-1005", records.get(0).id());
     }
 
+    @Test
+    void mergesFieldsFromDuplicatesInsteadOfOverwritingWithBlanks() throws Exception {
+        // Second row is missing the district; the first row's value should win rather
+        // than being lost.
+        String csv = "intersection_id,district,signal_type,active_flag\n"
+                + "INT-1020,Eastside,4-way,Y\n"
+                + "int-1020,,4-way,Y\n";
+
+        List<IntersectionRecord> records = clean(csv);
+
+        assertEquals(1, records.size());
+        assertEquals("Eastside", records.get(0).district());
+    }
+
 
 
 
