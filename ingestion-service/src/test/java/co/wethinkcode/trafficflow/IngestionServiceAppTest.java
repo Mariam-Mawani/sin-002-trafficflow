@@ -115,6 +115,20 @@ public class IngestionServiceAppTest {
         }
     }
 
+    @Test
+    void skipsRowsWithNoUsableIdInsteadOfCorruptingTheMap() throws Exception {
+        String csv = "intersection_id,district,signal_type,active_flag\n"
+                + ",Downtown,4-way,Y\n"
+                + "N/A,Midtown,4-way,Y\n"
+                + "INT-1030,Downtown,4-way,Y\n";
+
+        List<IntersectionRecord> records = clean(csv);
+
+        assertEquals(1, records.size());
+        assertEquals("INT-1030", records.get(0).id());
+    }
+
+
 
 
 
