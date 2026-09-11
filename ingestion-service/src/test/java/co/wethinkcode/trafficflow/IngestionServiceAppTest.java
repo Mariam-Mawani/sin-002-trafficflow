@@ -7,7 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IngestionServiceAppTest {
 
@@ -128,9 +128,14 @@ public class IngestionServiceAppTest {
         assertEquals("INT-1030", records.get(0).id());
     }
 
+    @Test
+    void cleansTheRealLegacyFixtureWithoutError() throws Exception {
+        List<IntersectionRecord> records = cleanCsv(
+                getClass().getResourceAsStream("/intersections-legacy.csv"));
 
-
-
-
-
+        // 18 raw rows, one duplicate pair (INT-1005 / int-1005) collapsed to one.
+        assertEquals(17, records.size());
+        assertEquals(17, records.stream().map(IntersectionRecord::id).distinct().count(),
+                "ids must be unique after cleaning");
+    }
 }
