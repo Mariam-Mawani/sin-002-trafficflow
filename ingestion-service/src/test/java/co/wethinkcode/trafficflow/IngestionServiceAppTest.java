@@ -45,6 +45,19 @@ public class IngestionServiceAppTest {
         assertEquals("pedestrian", record.signalType());
     }
 
+    @Test
+    void collapsesDuplicateRecordsForTheSameIntersectionUnderDifferentIdCasing() throws Exception {
+        String csv = "intersection_id,district,signal_type,active_flag\n"
+                + "INT-1005,Downtown,Roundabout,true\n"
+                + "int-1005,downtown ,ROUNDABOUT,TRUE\n";
+
+        List<IntersectionRecord> records = clean(csv);
+
+        assertEquals(1, records.size());
+        assertEquals("INT-1005", records.get(0).id());
+    }
+
+
 
 
 }
