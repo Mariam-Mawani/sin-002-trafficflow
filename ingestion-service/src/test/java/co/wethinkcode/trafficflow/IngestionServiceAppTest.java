@@ -33,4 +33,18 @@ public class IngestionServiceAppTest {
         assertEquals("Downtown", records.get(0).district());
     }
 
+    @Test
+    void normalizesCasingOfIdDistrictAndSignalType() throws Exception {
+        String csv = "intersection_id,district,signal_type,active_flag\n"
+                + "int-1002,MIDTOWN,PEDESTRIAN,yes\n";
+
+        IntersectionRecord record = clean(csv).get(0);
+
+        assertEquals("INT-1002", record.id());
+        assertEquals("Midtown", record.district());
+        assertEquals("pedestrian", record.signalType());
+    }
+
+
+
 }
