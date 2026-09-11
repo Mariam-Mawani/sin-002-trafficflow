@@ -71,6 +71,28 @@ public class IngestionServiceAppTest {
         assertEquals("Eastside", records.get(0).district());
     }
 
+    @Test
+    void treatsMissingAndPlaceholderValuesAsExplicitNullNotDropped() throws Exception {
+        String csv = "intersection_id,district,signal_type,active_flag\n"
+                + "INT-1007,Eastside,,1\n"
+                + "INT-1013,Westside,unknown,N/A\n"
+                + "INT-1015,,4-way,Y\n";
+
+        List<IntersectionRecord> records = clean(csv);
+
+        assertEquals(3, records.size(), "placeholder/missing values must not cause rows to be dropped");
+
+        IntersectionRecord int1007 = findById(records, "INT-1007");
+        assertNull(int1007.signalType());
+
+        IntersectionRecord int1013 = findById(records, "INT-1013");
+        assertNull(int1013.signalType());
+        assertNull(int1013.active());
+
+        IntersectionRecord int1015 = findById(records, "INT-1015");
+        assertNull(int1015.district());
+    }
+
 
 
 
