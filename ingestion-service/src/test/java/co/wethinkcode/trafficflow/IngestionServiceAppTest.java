@@ -93,6 +93,29 @@ public class IngestionServiceAppTest {
         assertNull(int1015.district());
     }
 
+    @Test
+    void normalizesBooleanFlagRepresentations() throws Exception {
+        String csv = "intersection_id,district,signal_type,active_flag\n"
+                + "INT-1,Downtown,4-way,Y\n"
+                + "INT-2,Downtown,4-way,yes\n"
+                + "INT-3,Downtown,4-way,true\n"
+                + "INT-4,Downtown,4-way,1\n"
+                + "INT-5,Downtown,4-way,N\n"
+                + "INT-6,Downtown,4-way,no\n"
+                + "INT-7,Downtown,4-way,FALSE\n"
+                + "INT-8,Downtown,4-way,0\n";
+
+        List<IntersectionRecord> records = clean(csv);
+
+        for (String truthyId : List.of("INT-1", "INT-2", "INT-3", "INT-4")) {
+            assertTrue(findById(records, truthyId).active(), truthyId + " should be active");
+        }
+        for (String falsyId : List.of("INT-5", "INT-6", "INT-7", "INT-8")) {
+            assertFalse(findById(records, falsyId).active(), falsyId + " should be inactive");
+        }
+    }
+
+
 
 
 
