@@ -116,5 +116,15 @@ public class IngestionServiceApp {
         }
     }
 
+    private static  String normalizeId(String raw) {
+        String trimmed = collapseSpaces(raw);
+        if (isPlaceholder(trimmed)) {
+            return null;
+        }
+        return trimmed.toUpperCase(locale.ROOT);
+    }
+
+
+
 
 }
