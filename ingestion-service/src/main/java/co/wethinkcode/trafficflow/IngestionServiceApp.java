@@ -2,7 +2,35 @@ package co.wethinkcode.trafficflow;
 
 import io.javalin.Javalin;
 
+import java.util.Set;
+
 public class IngestionServiceApp {
+
+    private static final String CSV_RESOURCE = "/intersections-legacy.csv";
+    /** Values that mean "no real value was supplied", regardless of case. */
+    private static final Set<String> PLACEHOLDER_VALUES = Set.of("", "n/a", "na", "tbd", "unknown", "-", "nan");
+    private static final Set<String> TRUE_VALUES = Set.of("y", "yes", "true", "1");
+    private static final Set<String> FALSE_VALUES = Set.of("n", "no", "false", "0");
+
+
+    public record IntersectionRecord(String id, String district, String signalType, Boolean active) {
+
+        /**
+         * Returns a copy of this record with any {@code null} fields filled
+         * in from {@code other}, preferring this record's own values where
+         * both are present. Used when merging duplicate rows for the same
+         * real-world intersection.
+         */
+        IntersectionRecord mergeWith(IntersectionRecord other) {
+            return new IntersectionRecord(
+                    id,
+                    district != null ? district : other.district,
+                    signalType != null ? signalType : other.signalType,
+                    active != null ? active : other.active
+            );
+        }
+
+    }
 
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7020);
@@ -12,5 +40,7 @@ public class IngestionServiceApp {
         // TODO: read and clean src/main/resources/intersections-legacy.csv (intersections, districts, signal types data —
         // trim whitespace, fix casing, normalize dates/booleans) and expose the
         // cleaned records here for the other services to consume.
+
+
     }
 }
