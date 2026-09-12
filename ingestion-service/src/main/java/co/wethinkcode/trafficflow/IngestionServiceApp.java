@@ -1,12 +1,15 @@
 package co.wethinkcode.trafficflow;
 
+import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import io.javalin.Javalin;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Set;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public class IngestionServiceApp {
 
@@ -67,5 +70,51 @@ public class IngestionServiceApp {
             throw new IllegalStateException("Failed to load and clean " + CSV_RESOURCE, e);
         }
     }
+
+    /**
+     * Parses and cleans the CSV read from {@code input}, collapsing duplicate
+     * records for the same intersection ID into one.
+     *
+     * <p>Handles: inconsistent casing in IDs/district/signal type; leading,
+     * trailing and double-space padding; duplicate rows for the same
+     * intersection under a different ID casing; missing/placeholder values
+     * (normalized to explicit {@code null}, never dropped or guessed); and
+     * inconsistent boolean flag representations.</p>
+     */
+    static List<IntersectionRecord> cleanCsv(InputStream input) throws IOException, CsvValidationException {
+        try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8);
+             CSVReader csvReader = new CSVReader(reader)) {
+
+            // First row is the header — we rely on column order (id, district, signal type,
+            // active flag) rather than header names, since header casing/padding is itself
+            // inconsistent in the source.
+            csvReader.readNext();
+
+            Map<String, IntersectionRecord> byId = new LinkedHashMap<>();
+
+            String[] row;
+            while ((row = csvReader.readNext()) != null) {
+                if (row.length < 4) {
+                    continue; // skip malformed/short rows rather than guessing at missing columns
+                }
+
+                IntersectionRecord record = new IntersectionRecord(
+                        normalizeId(row[0]),
+                        normalizeDistrict(row[1]),
+                        normalizeSignalType(row[2]),
+                        normalizeActiveFlag(row[3])
+                );
+
+                if (record.id() == null) {
+                    continue; // no usable ID means we can't identify or dedupe this record — skip it
+                }
+
+                byId.merge(record.id(), record, IntersectionRecord::mergeWith);
+            }
+
+            return new ArrayList<>(byId.values());
+        }
+    }
+
 
 }
