@@ -124,7 +124,13 @@ public class IngestionServiceApp {
         return trimmed.toUpperCase(locale.ROOT);
     }
 
-
+    private static String normalizeDistrict(String raw) {
+        String trimmed = collapseSpaces(raw);
+        if (isPlaceholder(trimmed)) {
+            return null;
+        }
+        return titleCase(trimmed);
+    }
 
 
 }
