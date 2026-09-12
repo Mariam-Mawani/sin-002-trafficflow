@@ -1,7 +1,11 @@
 package co.wethinkcode.trafficflow;
 
+import com.opencsv.exceptions.CsvValidationException;
 import io.javalin.Javalin;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Set;
 
 public class IngestionServiceApp {
@@ -33,6 +37,7 @@ public class IngestionServiceApp {
     }
 
     public static void main(String[] args) {
+        List<IntersectionRecord> cleanedRecords = loadCleanedRecords();
         Javalin app = Javalin.create().start(7020);
 
         app.get("/health", ctx -> ctx.result("OK"));
@@ -41,6 +46,26 @@ public class IngestionServiceApp {
         // trim whitespace, fix casing, normalize dates/booleans) and expose the
         // cleaned records here for the other services to consume.
 
-
+        // Cleaned intersection records for downstream services (see integration
+        // contract in the root README: ingestion-service -> intersection-service).
+        app.get("/intersections", ctx -> ctx.json(cleanedRecords));
+        System.out.println("Loaded " + cleanedRecords.size() + " cleaned intersection records.");
     }
+
+    /**
+     * Loads and cleans {@code intersections-legacy.csv} once at startup. If
+     * the file can't be read, fails fast rather than serving an empty/partial
+     * dataset silently.
+     */
+    static List<IntersectionRecord> loadCleanedRecords() {
+        try (InputStream csvStream = IngestionServiceApp.class.getResourceAsStream(CSV_RESOURCE)) {
+            if (csvStream == null) {
+                throw new IllegalStateException("Could not find " + CSV_RESOURCE + " on the classpath");
+            }
+            return cleanCsv(csvStream);
+        } catch (IOException | CsvValidationException e) {
+            throw new IllegalStateException("Failed to load and clean " + CSV_RESOURCE, e);
+        }
+    }
+
 }
