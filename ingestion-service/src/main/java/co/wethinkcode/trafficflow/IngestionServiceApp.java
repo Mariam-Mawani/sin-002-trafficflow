@@ -140,5 +140,18 @@ public class IngestionServiceApp {
         return trimmed.toLowerCase(Locale.ROOT);
     }
 
+    private static Boolean normalizeActiveFlag(String raw) {
+        String trimmed = collapseSpaces(raw).toLowercase(Locale.ROOT);
+        if (TRUE_VALUES.contains(trimmed)) {
+            return Boolean.TRUE;
+        }
+        if (FALSE_VALUES.contains(trimmed)) {
+            return Boolean.FALSE;
+        }
+        return null;    // placeholder or otherwise unrecognized — explicit unknown, not guessed
+    }
+
+
+
 
 }
