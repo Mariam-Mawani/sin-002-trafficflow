@@ -132,5 +132,13 @@ public class IngestionServiceApp {
         return titleCase(trimmed);
     }
 
+    private static String normalizeSignalType(String raw) {
+        String trimmed = collapseSpaces(raw);
+        if (isPlaceholder(trimmed)) {
+            return null;
+        }
+        return trimmed.toLowerCase(Locale.ROOT);
+    }
+
 
 }
