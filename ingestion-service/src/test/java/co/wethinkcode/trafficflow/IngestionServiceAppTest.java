@@ -6,12 +6,14 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
+import static co.wethinkcode.trafficflow.IngestionServiceApp.cleanCsv;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IngestionServiceAppTest {
 
-    private List<IntersectionRecord> clean(String csv) throws IOException, CsvValidationException {
+    private List<IngestionServiceApp.IntersectionRecord> clean(String csv) throws IOException, CsvValidationException {
 
         return cleanCsv(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
     }

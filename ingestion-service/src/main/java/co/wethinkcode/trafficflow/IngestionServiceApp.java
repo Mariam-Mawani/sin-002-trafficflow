@@ -151,6 +151,15 @@ public class IngestionServiceApp {
         return null;    // placeholder or otherwise unrecognized — explicit unknown, not guessed
     }
 
+    /** Trims outer whitespace and collapses any run of internal whitespace to a single space. */
+    private static String collapseSpaces(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.trim().replaceAll("\\s+", " ");
+    }
+
+
 
 
 
