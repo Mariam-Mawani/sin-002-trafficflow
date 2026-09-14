@@ -159,7 +159,9 @@ public class IngestionServiceApp {
         return raw.trim().replaceAll("\\s+", " ");
     }
 
-
+    private static boolean isPlaceholder(String trimmed) {
+        return PLACEHOLDER_VALUES.contains(trimmed.toLowerCase(Locale.ROOT));
+    }
 
 
 
