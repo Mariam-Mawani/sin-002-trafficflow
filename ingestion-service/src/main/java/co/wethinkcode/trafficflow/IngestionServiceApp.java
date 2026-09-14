@@ -139,7 +139,7 @@ public class IngestionServiceApp {
     }
 
     private static Boolean normalizeActiveFlag(String raw) {
-        String trimmed = collapseSpaces(raw).toLowercase(Locale.ROOT);
+        String trimmed = collapseSpaces(raw).toLowerCase(Locale.ROOT);
         if (TRUE_VALUES.contains(trimmed)) {
             return Boolean.TRUE;
         }
