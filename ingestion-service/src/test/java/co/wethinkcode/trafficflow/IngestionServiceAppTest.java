@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static co.wethinkcode.trafficflow.IngestionServiceApp.IntersectionRecord;
 import static co.wethinkcode.trafficflow.IngestionServiceApp.cleanCsv;
 import static org.junit.jupiter.api.Assertions.*;
 
