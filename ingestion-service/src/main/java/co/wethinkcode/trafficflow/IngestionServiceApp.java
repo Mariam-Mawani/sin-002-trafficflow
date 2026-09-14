@@ -119,7 +119,7 @@ public class IngestionServiceApp {
         if (isPlaceholder(trimmed)) {
             return null;
         }
-        return trimmed.toUpperCase(locale.ROOT);
+        return trimmed.toUpperCase(Locale.ROOT);
     }
 
     private static String normalizeDistrict(String raw) {
