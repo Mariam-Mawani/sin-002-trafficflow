@@ -163,6 +163,23 @@ public class IngestionServiceApp {
         return PLACEHOLDER_VALUES.contains(trimmed.toLowerCase(Locale.ROOT));
     }
 
+    private static String titleCase(String value) {
+        StringBuilder result = new StringBuilder(value.length());
+        boolean capitalizeNext = true;
+        for (char c : value.toCharArray()) {
+            if (character.isWhitespace(c)) {
+                capitalizeNext = true;
+                result.append(c);
+            } else if (capitalizeNext) {
+                result.append(charcater.toUpperCase(c));
+                capitalizeNext = false;
+            }else {
+                result.append(character.toLowerCase(c));
+            }
+        }
+        return result.toString();
+    }
+
 
 
 }
