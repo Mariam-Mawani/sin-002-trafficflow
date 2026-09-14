@@ -36,7 +36,6 @@ public class IngestionServiceApp {
                     active != null ? active : other.active
             );
         }
-
     }
 
     public static void main(String[] args) {
@@ -111,7 +110,6 @@ public class IngestionServiceApp {
 
                 byId.merge(record.id(), record, IntersectionRecord::mergeWith);
             }
-
             return new ArrayList<>(byId.values());
         }
     }
@@ -167,19 +165,16 @@ public class IngestionServiceApp {
         StringBuilder result = new StringBuilder(value.length());
         boolean capitalizeNext = true;
         for (char c : value.toCharArray()) {
-            if (character.isWhitespace(c)) {
+            if (Character.isWhitespace(c)) {
                 capitalizeNext = true;
                 result.append(c);
             } else if (capitalizeNext) {
-                result.append(charcater.toUpperCase(c));
+                result.append(Character.toUpperCase(c));
                 capitalizeNext = false;
-            }else {
-                result.append(character.toLowerCase(c));
+            } else {
+                result.append(Character.toLowerCase(c));
             }
         }
         return result.toString();
     }
-
-
-
 }
