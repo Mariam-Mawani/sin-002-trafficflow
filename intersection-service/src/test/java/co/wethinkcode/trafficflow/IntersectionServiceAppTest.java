@@ -3,6 +3,8 @@ package co.wethinkcode.trafficflow;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,6 +43,23 @@ public class IntersectionServiceAppTest {
 
         assertEquals(1, byId.size());
         assertTrue(byId.containsKey("INT-1002"));
+    }
+
+    @Test
+    void collectsDistinctDistrictsCaseInsensitively() {
+        List<IntersectionRecord> records = List.of(
+                new IntersectionRecord("INT-1", "Downtown", "4-way", true),
+                new IntersectionRecord("INT-2", "downtown", "4-way", true), // same district, different case
+                new IntersectionRecord("INT-3", "Midtown", "4-way", true),
+                new IntersectionRecord("INT-4", null, "4-way", true) // no district
+        );
+
+        TreeSet<String> districts = collectDistricts(records);
+
+        assertEquals(2, districts.size());
+        assertTrue(districts.contains("Downtown"));
+        assertTrue(districts.contains("DOWNTOWN")); // case-insensitive comparator
+        assertTrue(districts.contains("Midtown"));
     }
 
 
