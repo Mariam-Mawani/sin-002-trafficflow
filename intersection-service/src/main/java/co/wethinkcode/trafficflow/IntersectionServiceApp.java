@@ -131,6 +131,21 @@ public class IntersectionServiceApp {
         return byId;
     }
 
+    /**
+     * Builds the set of known district names used by /districts/{name}. Case-insensitive,
+     * since ingestion-service's cleaning already fixes casing but it costs nothing extra
+     * to be forgiving here too.
+     */
+    static TreeSet<String> collectDistricts(List<IntersectionRecord> records) {
+        TreeSet<String> districts = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (IntersectionRecord record : records) {
+            if (record.district() != null) {
+                districts.add(record.district());
+            }
+        }
+        return districts;
+    }
+
 }
 
 // MQ TODO: publishes a periodic heartbeat to ActiveMQ queue MqConfig.HEARTBEAT_QUEUE at
