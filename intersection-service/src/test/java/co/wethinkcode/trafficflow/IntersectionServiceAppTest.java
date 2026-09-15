@@ -61,7 +61,4 @@ public class IntersectionServiceAppTest {
         assertTrue(districts.contains("DOWNTOWN")); // case-insensitive comparator
         assertTrue(districts.contains("Midtown"));
     }
-
-
-
 }
