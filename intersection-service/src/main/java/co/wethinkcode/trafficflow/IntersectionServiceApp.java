@@ -3,9 +3,11 @@ package co.wethinkcode.trafficflow;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -74,8 +76,8 @@ public class IntersectionServiceApp {
             ctx.json(Map.of("district", name, "valid", true));
         });
 
-        System.out.println("intersection-service ready with " + byId.size()
-                + " intersections across " + districts.size() + " districts.");
+        System.out.println("intersection-service ready with " + byId.size() + " intersections across "
+                + districts.size() + " districts.");
     }
 
     /**
@@ -88,6 +90,34 @@ public class IntersectionServiceApp {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder(URI.create(INGESTION_SERVICE_URL)).GET().
                 timeout(Duration.ofSeconds(5)).build();
+
+        Exception lastError = null;
+        for (int attempt =1; attempt <= MAX_STARTUP_ATTEMPTS; attempt++) {
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() != 200) {
+                    throw new IOException("ingestion-service returned HTTP " + response.statusCode());
+                }
+                CollectionType listType = JSON.getTypeFactory()
+                        .constructCollectionType(List.class, IntersectionRecord.class);
+                return JSON.readValue(response.body(), listType);
+            } catch (IOException error) {
+                lastError = error;
+                System.out.println("Attempt " + attempt + "/" + MAX_STARTUP_ATTEMPTS
+                        + " to reach ingestion-service failed: " + error.getMessage());
+
+                if (attempt < MAX_STARTUP_ATTEMPTS) {
+                    Thread.sleep(RETRY_DELAY_MS);
+                }
+
+            }
+        }
+        throw new IllegalStateException(
+                "Could not load intersections from ingestion-service (" + INGESTION_SERVICE_URL + ") after "
+                        + MAX_STARTUP_ATTEMPTS + " attempts. Make sure ingestion-service"
+                        + " is running on port 7020 first.",
+                lastError);
+
     }
 
 }
