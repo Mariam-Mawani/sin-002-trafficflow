@@ -1,6 +1,7 @@
 package co.wethinkcode.trafficflow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 
@@ -87,14 +88,13 @@ public class IntersectionServiceApp {
      * times before giving up so a slightly-out-of-order manual startup doesn't crash
      * this service immediately.
      */
-    private static List<IntersectionRecord> fetchIntersectionsFromIngestionService() throws InterruptedException {
-
+    private static List<IntersectionRecord> fetchIntersectionsFromIngestionService() {
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder(URI.create(INGESTION_SERVICE_URL)).GET().
-                timeout(Duration.ofSeconds(5)).build();
+        HttpRequest request = HttpRequest.newBuilder(URI.create(INGESTION_SERVICE_URL)).GET()
+                .timeout(Duration.ofSeconds(5)).build();
 
         Exception lastError = null;
-        for (int attempt =1; attempt <= MAX_STARTUP_ATTEMPTS; attempt++) {
+        for (int attempt = 1; attempt <= MAX_STARTUP_ATTEMPTS; attempt++) {
             try {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() != 200) {
@@ -103,15 +103,24 @@ public class IntersectionServiceApp {
                 CollectionType listType = JSON.getTypeFactory()
                         .constructCollectionType(List.class, IntersectionRecord.class);
                 return JSON.readValue(response.body(), listType);
+            } catch (InterruptedException interrupted) {
+                // client.send() blocks waiting for a response, so it can be interrupted too,
+                // not just Thread.sleep() below - restore the interrupt status and bail out
+                // rather than silently swallowing it.
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for ingestion-service", interrupted);
             } catch (IOException error) {
                 lastError = error;
                 System.out.println("Attempt " + attempt + "/" + MAX_STARTUP_ATTEMPTS
                         + " to reach ingestion-service failed: " + error.getMessage());
-
                 if (attempt < MAX_STARTUP_ATTEMPTS) {
-                    Thread.sleep(RETRY_DELAY_MS);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt(); // restore the interrupt status for callers
+                        throw new IllegalStateException("Interrupted while waiting to retry ingestion-service", interrupted);
+                    }
                 }
-
             }
         }
         throw new IllegalStateException(
@@ -150,7 +159,6 @@ public class IntersectionServiceApp {
         }
         return districts;
     }
-
 }
 
 // MQ TODO: publishes a periodic heartbeat to ActiveMQ queue MqConfig.HEARTBEAT_QUEUE at
