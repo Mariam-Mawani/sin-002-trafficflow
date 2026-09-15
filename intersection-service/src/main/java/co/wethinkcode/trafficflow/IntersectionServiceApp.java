@@ -9,10 +9,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Validates intersection/district names — the "source of truth" for the rest
@@ -117,7 +114,21 @@ public class IntersectionServiceApp {
                         + MAX_STARTUP_ATTEMPTS + " attempts. Make sure ingestion-service"
                         + " is running on port 7020 first.",
                 lastError);
+    }
 
+    /**
+     * Builds the id -> record lookup used by /intersections/{id}. Pulled out as its
+     * own method (rather than inlined in main) so it can be unit-tested without a
+     * live ingestion-service.
+     */
+    static Map<String, IntersectionRecord> indexById(List<IntersectionRecord> records) {
+        Map<String, IntersectionRecord> byId = new LinkedHashMap<>();
+        for (IntersectionRecord record : records) {
+            if (record.id() != null) {
+                byId.put(record.id().toUpperCase(Locale.ROOT), record);
+            }
+        }
+        return byId;
     }
 
 }
