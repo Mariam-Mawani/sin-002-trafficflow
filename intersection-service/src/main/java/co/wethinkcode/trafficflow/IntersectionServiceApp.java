@@ -3,6 +3,10 @@ package co.wethinkcode.trafficflow;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -74,6 +78,17 @@ public class IntersectionServiceApp {
                 + " intersections across " + districts.size() + " districts.");
     }
 
+    /**
+     * Fetches the cleaned intersection list from ingestion-service, retrying a few
+     * times before giving up so a slightly-out-of-order manual startup doesn't crash
+     * this service immediately.
+     */
+    private static List<IntersectionRecord> fetchIntersectionsFromIngestionService() throws InterruptedException {
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder(URI.create(INGESTION_SERVICE_URL)).GET().
+                timeout(Duration.ofSeconds(5)).build();
+    }
 
 }
 
