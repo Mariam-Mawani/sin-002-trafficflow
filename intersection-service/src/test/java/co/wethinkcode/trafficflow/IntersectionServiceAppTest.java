@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import static co.wethinkcode.trafficflow.IntersectionServiceApp.IntersectionRecord;
+import static co.wethinkcode.trafficflow.IntersectionServiceApp.collectDistricts;
+import static co.wethinkcode.trafficflow.IntersectionServiceApp.indexById;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

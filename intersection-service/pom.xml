@@ -31,7 +31,14 @@
       <artifactId>activemq-client</artifactId>
       <version>5.18.3</version>
     </dependency>
-      <dependency>
+    <dependency>
+      <!-- Javalin's ctx.json() delegates to Jackson by default, and we use it directly
+           to parse the list ingestion-service returns. Not pulled in transitively. -->
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.16.1</version>
+    </dependency>
+    <dependency>
           <groupId>org.junit.jupiter</groupId>
           <artifactId>junit-jupiter</artifactId>
           <version>5.12.0</version>
@@ -42,6 +49,11 @@
   <build>
     <finalName>intersection-service</finalName>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
