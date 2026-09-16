@@ -16,6 +16,4 @@ public class RoutingServiceAppTest {
         assertEquals(5.0 + 1.5, estimateMinutes(1));
         assertEquals(5.0 + (8 * 1.5), estimateMinutes(8));
     }
-
-
 }
