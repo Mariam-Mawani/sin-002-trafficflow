@@ -4,7 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 
+import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -75,6 +80,22 @@ public class RoutingServiceApp {
      */
     static double estimateMinutes(int congestionLevel) {
         return BASE_MINUTES + (congestionLevel * MINUTES_PER_CONGESTION_LEVEL);
+    }
+
+    /**
+     * Asks intersection-service whether an id is real. We only care about the status
+     * code here (200 = known, 404 = unknown), so the response body is discarded.
+     */
+    private static boolean intersectionExists(String id) {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(INTERSECTION_SERVICE_BASE_URL + "/intersections/" + id))
+                .GET().timeout(Duration.ofSeconds(5)).build();
+        try {
+            HttpResponse<Void> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
+            return response.statusCode() == 200;
+        } catch (IOException | InterruptedException error) {
+            throw new IllegalStateException("Could not reach intersection-service at "
+                    + INTERSECTION_SERVICE_BASE_URL, error);
+        }
     }
 
 }
