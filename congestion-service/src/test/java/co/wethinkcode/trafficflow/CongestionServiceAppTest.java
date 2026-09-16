@@ -15,5 +15,10 @@ public class CongestionServiceAppTest {
         assertFalse(isValidLevel(9));
     }
 
+    @Test
+    void rejectsMissingLevel() {
+        assertFalse(isValidLevel(null));
+    }
+
 
 }
