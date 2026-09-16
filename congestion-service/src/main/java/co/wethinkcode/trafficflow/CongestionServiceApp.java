@@ -2,7 +2,18 @@ package co.wethinkcode.trafficflow;
 
 import io.javalin.Javalin;
 
+/**
+ * Tracks the city-wide congestion level, a single whole number from 0 (clear)
+ * to 8 (gridlock). routing-service polls GET /congestion per request in this
+ * stage; once stage 3 is in place this would publish to the congestion-topic
+ * instead.
+ */
 public class CongestionServiceApp {
+
+    static final int MIN_LEVEL = 0;
+    static final int MAX_LEVEL = 8;
+    private static final int STARTING_LEVEL = 3;    // arbitrary "moderate" starting point
+
 
     public static void main(String[] args) {
         Javalin app = Javalin.create().start(7022);
