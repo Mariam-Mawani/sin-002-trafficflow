@@ -2,6 +2,7 @@ package co.wethinkcode.trafficflow;
 
 import org.junit.jupiter.api.Test;
 
+import static co.wethinkcode.trafficflow.RoutingServiceApp.estimateMinutes;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RoutingServiceAppTest {

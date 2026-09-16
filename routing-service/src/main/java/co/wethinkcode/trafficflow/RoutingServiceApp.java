@@ -68,6 +68,15 @@ public class RoutingServiceApp {
 
         System.out.println("routing-service ready.");
     }
+
+    /**
+     * The actual travel-time formula, pulled out as its own method so it can be
+     * unit-tested without any HTTP calls at all.
+     */
+    static double estimateMinutes(int congestionLevel) {
+        return BASE_MINUTES + (congestionLevel * MINUTES_PER_CONGESTION_LEVEL);
+    }
+
 }
 
 // MQ TODO: subscribes to ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL (see co.wethinkcode.trafficflow.mq.MqConfig)
