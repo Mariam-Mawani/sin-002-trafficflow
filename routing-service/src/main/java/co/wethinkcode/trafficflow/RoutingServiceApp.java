@@ -2,8 +2,10 @@ package co.wethinkcode.trafficflow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
+import io.javalin.http.HttpStatus;
 
 import java.net.http.HttpClient;
+import java.util.Map;
 
 /**
  * Provides estimated travel times based on congestion and intersection.
@@ -31,6 +33,40 @@ public class RoutingServiceApp {
 
         // TODO (Provides estimated travel times based on congestion and intersection.)
         // Add domain endpoints for routing-service here.
+
+        app.get("/routes/estimate", ctx -> {
+            String from = ctx.queryParam("from");
+            String to = ctx.queryParam("to");
+
+            if (from == null || from.isBlank() || to == null || to.isBlank()) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                        .json(Map.of("error", "both 'from' and 'to' query params are required"));
+                return;
+            }
+
+            // Validate both endpoints against intersection-service before doing any
+            // "work" — no point estimating a travel time for a route that doesn't exist.
+            if (!intersectionExists(from)) {
+                ctx.status(HttpStatus.NOT_FOUND).json(Map.of("error", "Unknown 'from' intersection: " + from));
+                return;
+            }
+            if (!intersectionExists(to)) {
+                ctx.status(HttpStatus.NOT_FOUND).json(Map.of("error", "Unknown 'to' intersection: " + to));
+                return;
+            }
+
+            int congestionLevel = fetchCongestionLevel();
+            double estimatedMinutes = estimateMinutes(congestionLevel);
+
+            ctx.json(Map.of(
+                    "from", from,
+                    "to", to,
+                    "congestionLevel", congestionLevel,
+                    "estimatedMinutes", estimatedMinutes
+            ));
+        });
+
+        System.out.println("routing-service ready.");
     }
 }
 
