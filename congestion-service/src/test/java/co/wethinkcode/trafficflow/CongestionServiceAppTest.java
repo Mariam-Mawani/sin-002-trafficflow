@@ -9,5 +9,11 @@ public class CongestionServiceAppTest {
         assertTrue(isValidLevel(8));
     }
 
+    @Test
+    void rejectsLevelsOutsideRange() {
+        assertFalse(isValidLevel(-1));
+        assertFalse(isValidLevel(9));
+    }
+
 
 }
