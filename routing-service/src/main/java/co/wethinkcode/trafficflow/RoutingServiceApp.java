@@ -1,5 +1,6 @@
 package co.wethinkcode.trafficflow;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
@@ -59,7 +60,6 @@ public class RoutingServiceApp {
                 ctx.status(HttpStatus.NOT_FOUND).json(Map.of("error", "Unknown 'to' intersection: " + to));
                 return;
             }
-
             int congestionLevel = fetchCongestionLevel();
             double estimatedMinutes = estimateMinutes(congestionLevel);
 
@@ -98,6 +98,21 @@ public class RoutingServiceApp {
         }
     }
 
+    /** Asks congestion-service for the current city-wide congestion level. */
+    private static int fetchCongestionLevel() {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(CONGESTION_SERVICE_URL))
+                .GET().timeout(Duration.ofSeconds(5)).build();
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new IOException("congestion-service returned HTTP " + response.statusCode());
+            }
+            JsonNode body = JSON.readTree(response.body());
+            return body.get("level").asInt();
+        } catch (IOException | InterruptedException e) {
+            throw new IllegalStateException("Could not reach congestion-service at " + CONGESTION_SERVICE_URL, e);
+        }
+    }
 }
 
 // MQ TODO: subscribes to ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL (see co.wethinkcode.trafficflow.mq.MqConfig)
