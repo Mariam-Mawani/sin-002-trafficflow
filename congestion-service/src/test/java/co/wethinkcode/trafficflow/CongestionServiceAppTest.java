@@ -2,6 +2,7 @@ package co.wethinkcode.trafficflow;
 
 import org.junit.jupiter.api.Test;
 
+import static co.wethinkcode.trafficflow.CongestionServiceApp.isValidLevel;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,6 +26,4 @@ public class CongestionServiceAppTest {
     void rejectsMissingLevel() {
         assertFalse(isValidLevel(null));
     }
-
-
 }

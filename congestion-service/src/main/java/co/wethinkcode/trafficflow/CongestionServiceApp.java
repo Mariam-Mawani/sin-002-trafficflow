@@ -57,6 +57,11 @@ public class CongestionServiceApp {
     static boolean isValidLevel(Integer level) {
         return level != null && level >= MIN_LEVEL && level <= MAX_LEVEL;
     }
+
+    /** Request body shape for POST /congestion. */
+    public record CongestionUpdate(Integer level) {
+
+    }
 }
 
 // MQ TODO: publishes to ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL (see co.wethinkcode.trafficflow.mq.MqConfig)
