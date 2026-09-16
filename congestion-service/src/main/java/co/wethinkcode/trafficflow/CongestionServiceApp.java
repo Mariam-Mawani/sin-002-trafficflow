@@ -2,6 +2,8 @@ package co.wethinkcode.trafficflow;
 
 import io.javalin.Javalin;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Tracks the city-wide congestion level, a single whole number from 0 (clear)
  * to 8 (gridlock). routing-service polls GET /congestion per request in this
@@ -16,12 +18,19 @@ public class CongestionServiceApp {
 
 
     public static void main(String[] args) {
+
+        AtomicInteger congestionLevel = new AtomicInteger(STARTING_LEVEL);
         Javalin app = Javalin.create().start(7022);
 
         app.get("/health", ctx -> ctx.result("OK"));
 
         // TODO (Tracks the city-wide Congestion Level (0-8).)
         // Add domain endpoints for congestion-service here.
+
+        // routing-service calls this per-request in stage 2 to factor the current
+        // congestion level into its travel-time estimate.
+        app.get("/congestion", ctx -> ctx.json(Map.of("level", congestionLevel.get())));
+
     }
 }
 
