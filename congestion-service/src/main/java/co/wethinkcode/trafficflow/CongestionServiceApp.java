@@ -49,6 +49,14 @@ public class CongestionServiceApp {
         });
         System.out.println("congestion-service ready, starting congestion level = " + STARTING_LEVEL);
     }
+
+    /**
+     * Pulled out as its own method (rather than inlined in the POST handler) so the
+     * validation rule can be unit-tested without spinning up the whole app.
+     */
+    static boolean isValidLevel(Integer level) {
+        return level != null && level >= MIN_LEVEL && level <= MAX_LEVEL;
+    }
 }
 
 // MQ TODO: publishes to ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL (see co.wethinkcode.trafficflow.mq.MqConfig)
