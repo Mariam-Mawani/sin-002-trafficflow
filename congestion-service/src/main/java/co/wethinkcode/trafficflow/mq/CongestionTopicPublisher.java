@@ -1,6 +1,5 @@
-package co.wethinkcode.trafficflow;
+package co.wethinkcode.trafficflow.mq;
 
-import co.wethinkcode.trafficflow.mq.MqConfig;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
@@ -47,6 +46,8 @@ public class CongestionTopicPublisher {
         System.out.println("Connected to broker at " + MqConfig.BROKER_URL
                 + " — publishing to " + MqConfig.TOPIC);
     }
+
+
 
 
 }
