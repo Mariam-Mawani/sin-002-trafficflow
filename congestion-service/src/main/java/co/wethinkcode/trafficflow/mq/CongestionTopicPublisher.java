@@ -61,5 +61,10 @@ public class CongestionTopicPublisher {
         }
     }
 
+    /** Releases the broker connection, if one is open. */
+    public void stop() {
+        closeConnection();
+    }
+
 
 }
