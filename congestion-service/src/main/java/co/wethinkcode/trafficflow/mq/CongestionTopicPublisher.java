@@ -1,6 +1,7 @@
 package co.wethinkcode.trafficflow;
 
 import co.wethinkcode.trafficflow.mq.MqConfig;
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
 
@@ -31,5 +32,21 @@ public class CongestionTopicPublisher {
             closeConnection();
         }
     }
+
+    private void ensureConnected() throws JMSException {
+        if (connection != null) {
+            return; // already connected from a previous publish
+        }
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(MqConfig.BROKER_URL);
+        connection = factory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic(MqConfig.TOPIC);
+        producer = session.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT); // only the latest level matters
+        System.out.println("Connected to broker at " + MqConfig.BROKER_URL
+                + " — publishing to " + MqConfig.TOPIC);
+    }
+
 
 }

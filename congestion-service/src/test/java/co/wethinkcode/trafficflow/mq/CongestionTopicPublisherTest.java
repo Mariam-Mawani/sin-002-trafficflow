@@ -1,5 +1,6 @@
 package co.wethinkcode.trafficflow;
 
+import co.wethinkcode.trafficflow.mq.CongestionTopicPublisher;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
