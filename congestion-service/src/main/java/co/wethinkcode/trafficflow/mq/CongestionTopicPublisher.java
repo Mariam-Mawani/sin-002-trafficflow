@@ -66,5 +66,8 @@ public class CongestionTopicPublisher {
         closeConnection();
     }
 
-
+    /** Pulled out so the message shape can be unit-tested without a live broker. */
+    static String buildPayload(int level) {
+        return "{\"level\":" + level + "}";
+    }
 }
