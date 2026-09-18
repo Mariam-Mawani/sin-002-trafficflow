@@ -57,5 +57,11 @@ public class CongestionTopicSubscriber {
         }
     }
 
+    /** The most recently seen congestion level, or {@link #DEFAULT_LEVEL} if none has arrived yet. */
+    public int getCurrentLevel() {
+        return currentLevel.get();
+    }
+
+
 
 }
