@@ -1,5 +1,6 @@
 package co.wethinkcode.trafficflow;
 
+import co.wethinkcode.trafficflow.mq.CongestionTopicPublisher;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 
@@ -22,6 +23,12 @@ public class CongestionServiceApp {
     public static void main(String[] args) {
 
         AtomicInteger congestionLevel = new AtomicInteger(STARTING_LEVEL);
+        CongestionTopicPublisher topicPublisher = new CongestionTopicPublisher();
+        // Best-effort announcement of the starting level - only useful to a consumer
+        // that happens to already be connected and listening, since this is a plain
+        // pub/sub topic with no message history for late subscribers.
+        topicPublisher.publish(congestionLevel.get());
+        Runtime.getRuntime().addShutdownHook(new Thread(topicPublisher::stop));
         Javalin app = Javalin.create().start(7022);
 
         app.get("/health", ctx -> ctx.result("OK"));
@@ -45,6 +52,7 @@ public class CongestionServiceApp {
                 return;
             }
             congestionLevel.set(update.level());
+            topicPublisher.publish(update.level);   // tell routing-service (and anyone else listening)
             ctx.json(Map.of("level", congestionLevel.get()));
         });
         System.out.println("congestion-service ready, starting congestion level = " + STARTING_LEVEL);
