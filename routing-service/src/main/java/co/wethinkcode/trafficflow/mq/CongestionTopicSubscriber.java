@@ -73,5 +73,13 @@ public class CongestionTopicSubscriber {
         }
     }
 
-
+    /**
+     * Pulled out so the parsing can be unit-tested without a live broker or message.
+     * The shape ({@code {"level": n}}) is small and fixed enough that reaching for a
+     * full JSON library here felt like overkill.
+     */
+    static int parseLevel(String json) {
+        String digits = json.replaceAll("[^0-9]", "");
+        return Integer.parseInt(digits);
+    }
 }
