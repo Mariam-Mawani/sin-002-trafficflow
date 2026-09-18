@@ -39,8 +39,8 @@ public class CongestionTopicSubscriber {
             consumer.setMessageListener(this::onMessage);
             System.out.println("Connected to broker at " + MqConfig.BROKER_URL
                     + " — listening on " + MqConfig.TOPIC);
-        } catch (JMSException e) {
-            System.out.println("Could not subscribe to " + MqConfig.TOPIC + ": " + e.getMessage()
+        } catch (JMSException error) {
+            System.out.println("Could not subscribe to " + MqConfig.TOPIC + ": " + error.getMessage()
                     + ". Falling back to a default congestion level (" + DEFAULT_LEVEL
                     + ") until this service is restarted. Is the broker up at " + MqConfig.BROKER_URL
                     + "? (see common/README.md: docker compose up -d)");
@@ -52,8 +52,8 @@ public class CongestionTopicSubscriber {
             if (message instanceof TextMessage textMessage) {
                 currentLevel.set(parseLevel(textMessage.getText()));
             }
-        } catch (JMSException e) {
-            System.out.println("Failed to read a congestion-topic message: " + e.getMessage());
+        } catch (JMSException error) {
+            System.out.println("Failed to read a congestion-topic message: " + error.getMessage());
         }
     }
 
@@ -62,6 +62,16 @@ public class CongestionTopicSubscriber {
         return currentLevel.get();
     }
 
+    /** Releases the broker connection, if one is open. */
+    public void stop() {
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (JMSException ignored) {
+            // best-effort cleanup - nothing useful to do if even closing fails
+        }
+    }
 
 
 }
