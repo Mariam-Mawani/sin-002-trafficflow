@@ -1,6 +1,8 @@
 package co.wethinkcode.trafficflow.mq;
 
-import javax.jms.Connection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+
+import javax.jms.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -15,5 +17,32 @@ public class CongestionTopicSubscriber {
     private static final int DEFAULT_LEVEL = 0;
     private final AtomicInteger currentLevel = new AtomicInteger(DEFAULT_LEVEL);
     private Connection connection;
+
+
+    /**
+     * Connects and starts listening. Best-effort: if the broker isn't reachable
+     * right now, this logs a warning and routing-service simply keeps using
+     * {@link #DEFAULT_LEVEL} until it's restarted — there's no periodic retry
+     * here, since (unlike a producer) a subscriber can't "try again on the next
+     * publish" if it never connected in the first place.
+     */
+    public void start() {
+        try {
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(MqConfig.BROKER_URL);
+            connection = factory.createConnection();
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTopic(MqConfig.TOPIC);
+            MessageConsumer consumer = session.createConsumer(topic);
+            consumer.setMessageListener(this::onMessage);
+            System.out.println("Connected to broker at " + MqConfig.BROKER_URL
+                    + " — listening on " + MqConfig.TOPIC);
+        } catch (JMSException e) {
+            System.out.println("Could not subscribe to " + MqConfig.TOPIC + ": " + e.getMessage()
+                    + ". Falling back to a default congestion level (" + DEFAULT_LEVEL
+                    + ") until this service is restarted. Is the broker up at " + MqConfig.BROKER_URL
+                    + "? (see common/README.md: docker compose up -d)");
+        }
+    }
 
 }
