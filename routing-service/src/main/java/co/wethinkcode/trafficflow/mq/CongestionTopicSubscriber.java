@@ -5,6 +5,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.rmi.server.LogStream.parseLevel;
+
 /**
  * Subscribes to {@link MqConfig#TOPIC} and keeps the most recently seen
  * congestion level in memory, replacing the direct {@code GET /congestion}
@@ -44,5 +46,16 @@ public class CongestionTopicSubscriber {
                     + "? (see common/README.md: docker compose up -d)");
         }
     }
+
+    private void onMessage(Message message) {
+        try {
+            if (message instanceof TextMessage textMessage) {
+                currentLevel.set(parseLevel(textMessage.getText()));
+            }
+        } catch (JMSException e) {
+            System.out.println("Failed to read a congestion-topic message: " + e.getMessage());
+        }
+    }
+
 
 }
