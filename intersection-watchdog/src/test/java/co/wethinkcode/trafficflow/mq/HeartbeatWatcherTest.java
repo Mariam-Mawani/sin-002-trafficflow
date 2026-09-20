@@ -24,5 +24,12 @@ public class HeartbeatWatcherTest {
         assertTrue(HeartbeatWatcher.isStale(last, Instant.now(), THRESHOLD));
     }
 
+    @Test
+    void notStaleWhenNoHeartbeatHasBeenSeenYet() {
+        // e.g. right after startup, before the first heartbeat has arrived - nothing
+        // to compare against yet, so this must not be treated as "missed".
+        assertFalse(HeartbeatWatcher.isStale(null, Instant.now(), THRESHOLD));
+    }
+
 
 }
