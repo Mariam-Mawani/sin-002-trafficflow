@@ -1,6 +1,8 @@
 package co.wethinkcode.trafficflow.mq;
 
-import javax.jms.Connection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+
+import javax.jms.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
@@ -41,5 +43,34 @@ public class HeartbeatWatcher {
         scheduler.shutdownNow();
         closeConnection();
     }
+
+    private void ensureConnected() {
+        if (connection != null) {
+            return; // already connected from a previous attempt
+        }
+        try {
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(MqConfig.BROKER_URL);
+            connection = factory.createConnection();
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            Queue heartbeatQueue = session.createQueue(MqConfig.HEARTBEAT_QUEUE);
+            MessageConsumer heartbeatConsumer = session.createConsumer(heartbeatQueue);
+            heartbeatConsumer.setMessageListener(this::onHeartbeat);
+
+            Queue deadLetterQueue = session.createQueue(DEAD_LETTER_QUEUE);
+            MessageConsumer deadLetterConsumer = session.createConsumer(deadLetterQueue);
+            deadLetterConsumer.setMessageListener(this::onDeadLetter);
+
+            System.out.println("Connected to broker at " + MqConfig.BROKER_URL
+                    + " — watching " + MqConfig.HEARTBEAT_QUEUE + " and " + DEAD_LETTER_QUEUE);
+        } catch (JMSException error) {
+            System.out.println("Could not connect to broker at " + MqConfig.BROKER_URL + ": " + error.getMessage()
+                    + ". Will retry in " + RECONNECT_INTERVAL_SECONDS
+                    + "s. (see common/README.md: docker compose up -d)");
+            closeConnection();
+        }
+    }
+
 
 }
