@@ -72,5 +72,17 @@ public class HeartbeatWatcher {
         }
     }
 
+    private void onHeartbeat(Message message) {
+        Instant now = Instant.now();
+        boolean wasDown = alertActive;
+        lastHeartbeatAt.set(now);
+        if (wasDown) {
+            alertActive = false;
+            System.out.println("[RECOVERED] Heartbeat received again from intersection-service at "
+                    + now + " — it's back up.");
+        }
+    }
+
+
 
 }
