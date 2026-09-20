@@ -31,5 +31,10 @@ public class HeartbeatWatcherTest {
         assertFalse(HeartbeatWatcher.isStale(null, Instant.now(), THRESHOLD));
     }
 
+    @Test
+    void exactlyAtTheThresholdIsNotYetStale() {
+        Instant last = Instant.now().minus(THRESHOLD);
+        assertFalse(HeartbeatWatcher.isStale(last, Instant.now(), THRESHOLD));
+    }
 
 }
