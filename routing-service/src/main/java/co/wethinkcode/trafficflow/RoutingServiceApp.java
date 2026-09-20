@@ -1,5 +1,6 @@
 package co.wethinkcode.trafficflow;
 
+import co.wethinkcode.trafficflow.mq.CongestionTopicSubscriber;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
@@ -15,13 +16,13 @@ import java.util.Map;
 
 /**
  * Provides estimated travel times based on congestion and intersection.
- * Talks to intersection-service and congestion-service directly over REST
- * (stage 2) — no queueing/decoupling yet, that's stage 3.
+ * Validates route endpoints against intersection-service directly over REST,
+ * but gets its congestion level from the congestion-topic ActiveMQ topic
+ * (stage 3) rather than polling congestion-service directly (stage 2).
  */
 public class RoutingServiceApp {
 
     private static final String INTERSECTION_SERVICE_BASE_URL = "http://localhost:7021";
-    private static final String CONGESTION_SERVICE_URL = "http://localhost:7022/congestion";
     // Simplified travel-time model: a fixed base time for any direct hop between two
     // intersections, stretched out by however congested the city currently is. There's
     // no real road-distance data in this exercise, so this is illustrative rather than
@@ -29,10 +30,17 @@ public class RoutingServiceApp {
     static final double BASE_MINUTES = 5.0;
     static final double MINUTES_PER_CONGESTION_LEVEL = 1.5;
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-    private static final ObjectMapper JSON = new ObjectMapper();
 
 
     public static void main(String[] args) {
+        // Congestion level now arrives via congestion-topic instead of a per-request
+        // REST call to congestion-service — the subscriber just keeps the latest
+        // value it has seen in memory, and reading it below is a plain in-memory
+        // lookup rather than a network call.
+        CongestionTopicSubscriber congestionSubscriber = new CongestionTopicSubscriber();
+        congestionSubscriber.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(congestionSubscriber::stop));
+
         Javalin app = Javalin.create().start(7023);
 
         app.get("/health", ctx -> ctx.result("OK"));
@@ -60,7 +68,7 @@ public class RoutingServiceApp {
                 ctx.status(HttpStatus.NOT_FOUND).json(Map.of("error", "Unknown 'to' intersection: " + to));
                 return;
             }
-            int congestionLevel = fetchCongestionLevel();
+            int congestionLevel = congestionSubscriber.getCurrentLevel();
             double estimatedMinutes = estimateMinutes(congestionLevel);
 
             ctx.json(Map.of(
@@ -92,25 +100,13 @@ public class RoutingServiceApp {
         try {
             HttpResponse<Void> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
             return response.statusCode() == 200;
-        } catch (IOException | InterruptedException error) {
-            throw new IllegalStateException("Could not reach intersection-service at "
-                    + INTERSECTION_SERVICE_BASE_URL, error);
-        }
-    }
-
-    /** Asks congestion-service for the current city-wide congestion level. */
-    private static int fetchCongestionLevel() {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(CONGESTION_SERVICE_URL))
-                .GET().timeout(Duration.ofSeconds(5)).build();
-        try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                throw new IOException("congestion-service returned HTTP " + response.statusCode());
-            }
-            JsonNode body = JSON.readTree(response.body());
-            return body.get("level").asInt();
-        } catch (IOException | InterruptedException e) {
-            throw new IllegalStateException("Could not reach congestion-service at " + CONGESTION_SERVICE_URL, e);
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt(); // restore the interrupt status for callers
+            throw new IllegalStateException(
+                    "Interrupted while waiting for intersection-service", interrupted);
+        } catch (IOException error) {
+            throw new IllegalStateException(
+                    "Could not reach intersection-service at " + INTERSECTION_SERVICE_BASE_URL, error);
         }
     }
 }
