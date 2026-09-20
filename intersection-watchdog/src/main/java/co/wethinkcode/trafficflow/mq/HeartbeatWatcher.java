@@ -83,6 +83,22 @@ public class HeartbeatWatcher {
         }
     }
 
+    private void onDeadLetter(Message message) {
+        System.out.println("[ALERT] A message landed in the dead-letter queue (" + DEAD_LETTER_QUEUE
+                + ") — a message from intersection-service may have failed delivery. Check the broker's"
+                + " web console at http://localhost:8161 for details.");
+    }
+
+    private void checkForMissedHeartbeat() {
+        Instant last = lastHeartbeatAt.get();
+        if (isStale(last, Instant.now(), MISSED_HEARTBEAT_THRESHOLD) && !alertActive) {
+            alertActive = true;
+            System.out.println("[ALERT] No heartbeat from intersection-service in over "
+                    + MISSED_HEARTBEAT_THRESHOLD.toSeconds() + "s (last seen " + last
+                    + ") — it may be down. Routes can no longer be validated.");
+        }
+    }
+
 
 
 }
