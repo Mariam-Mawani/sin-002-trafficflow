@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HeartbeatWatcherTest {
 
@@ -17,6 +18,11 @@ public class HeartbeatWatcherTest {
         assertFalse(HeartbeatWatcher.isStale(last, Instant.now(), THRESHOLD));
     }
 
+    @Test
+    void staleWhenLastHeartbeatIsOlderThanTheThreshold() {
+        Instant last = Instant.now().minusSeconds(20);
+        assertTrue(HeartbeatWatcher.isStale(last, Instant.now(), THRESHOLD));
+    }
 
 
 }
