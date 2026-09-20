@@ -18,7 +18,6 @@ public class HeartbeatWatcher {
     private static final Duration MISSED_HEARTBEAT_THRESHOLD = Duration.ofSeconds(16);
     private static final long CHECK_INTERVAL_SECONDS = 5;
     private static final long RECONNECT_INTERVAL_SECONDS = 10;
-
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "intersection-watchdog");
         thread.setDaemon(true); // don't stop the JVM from exiting just for this
@@ -29,5 +28,12 @@ public class HeartbeatWatcher {
     private volatile boolean alertActive = false; // avoid re-alerting on every single check tick
     private Connection connection;
 
+
+    /** Connects (retrying if the broker isn't up yet) and starts watching. */
+    public void start() {
+        scheduler.scheduleAtFixedRate(this::ensureConnected, 0, RECONNECT_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(
+                this::checkForMissedHeartbeat, CHECK_INTERVAL_SECONDS, CHECK_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    }
 
 }
