@@ -36,4 +36,10 @@ public class HeartbeatWatcher {
                 this::checkForMissedHeartbeat, CHECK_INTERVAL_SECONDS, CHECK_INTERVAL_SECONDS, TimeUnit.SECONDS);
     }
 
+    /** Stops watching and releases the broker connection, if one is open. */
+    public void stop() {
+        scheduler.shutdownNow();
+        closeConnection();
+    }
+
 }
