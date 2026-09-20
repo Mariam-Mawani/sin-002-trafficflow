@@ -99,6 +99,18 @@ public class HeartbeatWatcher {
         }
     }
 
+    private void closeConnection() {
+        try {
+            if (connection != null) {
+                connection.close(); // closing the connection also closes its session/consumers
+            }
+        } catch (JMSException ignored) {
+            // best-effort cleanup - nothing useful to do if even closing fails
+        } finally {
+            connection = null;
+        }
+    }
+
 
 
 }
