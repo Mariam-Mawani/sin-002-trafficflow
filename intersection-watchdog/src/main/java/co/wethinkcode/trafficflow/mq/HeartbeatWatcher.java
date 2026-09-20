@@ -111,6 +111,13 @@ public class HeartbeatWatcher {
         }
     }
 
-
-
+    /**
+     * Pulled out so the staleness rule can be unit-tested without a live broker,
+     * a real clock, or waiting 16 real seconds. {@code null} (no heartbeat received
+     * yet — e.g. right after startup) is never stale; there's nothing to compare
+     * against, so it's not this method's job to alert on that case.
+     */
+    static boolean isStale(Instant lastHeartbeatAt, Instant now, Duration threshold) {
+        return lastHeartbeatAt != null && Duration.between(lastHeartbeatAt, now).compareTo(threshold) > 0;
+    }
 }
