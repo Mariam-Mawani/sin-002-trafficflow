@@ -5,7 +5,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.rmi.server.LogStream.parseLevel;
 
 /**
  * Subscribes to {@link MqConfig#TOPIC} and keeps the most recently seen
